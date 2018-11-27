@@ -109,10 +109,3 @@ func main() {
 	t := time.Now()
 	fmt.Println(t.Sub(start))
 }
-
-//boardSize = 6
-//qtdGoRoutines
-//	1-> 74.257 seconds
-//	2-> 49.165 seconds
-//	3-> 41.946 seconds
-//	6-> 27.173 seconds
