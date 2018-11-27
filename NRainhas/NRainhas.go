@@ -10,6 +10,7 @@ type boardGame struct {
 }
 
 func (b boardGame) hasCollision() bool {
+	// fmt.Println("Testando ->", b)
 	n := b.Size
 	for i := 0; i < n; i++ { //0 a 6
 		for j := i + 1; j < n; j++ { //i a 7
@@ -56,31 +57,58 @@ func findResult(s int) {
 	fmt.Println("404 Solution not found")
 }
 
-func findResultParallel(s int, qtdRoutines int) {
-	r1 := routineParallel([]int{0, 0, 0, 0, 0, 0, 0, 0}, []int{1, 1, 1, 1, 1, 1, 1, 1}, 4)
-	r2 := routineParallel([]int{2, 0, 0, 0, 0, 0, 0, 0}, []int{3, 3, 3, 3, 3, 3, 3, 3}, 4)
-	if r1 == false && r2 == false {
+func createBoard(begin, size int) boardGame {
+	s := []int{begin}
+	for i := 0; i < size*2-1; i++ {
+		s = append(s, 0)
+	}
+	return boardGame{Size: size, Board: s}
+}
+
+func routineParallel(begin, end int, size int, ch chan int) {
+	board := createBoard(begin, size)
+	fmt.Println(begin, " | ", end)
+	qtd := 0
+	for board.next() && board.Board[0] != end {
+		if !board.hasCollision() {
+			//fmt.Println("Solution found:", board)
+			qtd += 1
+			// ch <- qtd //first result
+			// break     //first result
+		}
+	}
+	ch <- qtd //all results
+}
+
+func findResultParallel(boardSize, qtdGoRoutines int) {
+	ch := make(chan int, 1)
+	solutions := 0
+	linesPerGoRoutine := boardSize / qtdGoRoutines
+	i := 0
+	for i = 0; i < qtdGoRoutines-1; i++ {
+		go routineParallel(linesPerGoRoutine*i, linesPerGoRoutine*(i+1), boardSize, ch)
+	}
+	go routineParallel(linesPerGoRoutine*i, boardSize, boardSize, ch)
+	for i := 0; i < qtdGoRoutines; i++ { //all results
+		solutions += <-ch
+	}
+	// solutions += <-ch //first result
+	if solutions > 0 {
+		fmt.Println(solutions, " solutions found")
+	} else {
 		fmt.Println("404 Solution not found")
 	}
 }
 
-func routineParallel(begin []int, end []int, s int) bool {
-	board := boardGame{Size: s, Board: begin}
-	for board.next() { // || board.Board == end
-		if !board.hasCollision() {
-			fmt.Println("Solution found")
-			fmt.Println(board)
-			return true
-		}
-	}
-	return false
+func main() {
+	boardSize := 6
+	qtdGoRoutines := 6
+	findResultParallel(boardSize, qtdGoRoutines)
 }
 
-func main() {
-	//bCollision := boardGame{Size:4, Board:[]int{0,0,0,1,0,2,0,3}}
-	//bNoCollision := boardGame{Size:4, Board:[]int{0,2,1,0,2,3,3,1}}
-	//fmt.Println("1 -> ", bCollision.hasCollision())
-	//fmt.Println("2 -> ", bNoCollision.hasCollision())
-	//findResult(8)
-	findResultParallel(4, 2)
-}
+//boardSize = 6
+//qtdGoRoutines
+//	1-> 74.257 seconds
+//	2-> 49.165 seconds
+//	3-> 41.946 seconds
+//	6-> 27.173 seconds
