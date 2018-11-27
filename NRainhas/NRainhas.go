@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 type boardGame struct {
@@ -67,7 +68,7 @@ func createBoard(begin, size int) boardGame {
 
 func routineParallel(begin, end int, size int, ch chan int) {
 	board := createBoard(begin, size)
-	fmt.Println(begin, " | ", end)
+	//fmt.Println(begin, " | ", end)
 	qtd := 0
 	for board.next() && board.Board[0] != end {
 		if !board.hasCollision() {
@@ -93,17 +94,20 @@ func findResultParallel(boardSize, qtdGoRoutines int) {
 		solutions += <-ch
 	}
 	// solutions += <-ch //first result
-	if solutions > 0 {
-		fmt.Println(solutions, " solutions found")
-	} else {
-		fmt.Println("404 Solution not found")
-	}
+	// if solutions > 0 {
+	// 	fmt.Println(solutions, " solutions found")
+	// } else {
+	// 	fmt.Println("404 Solution not found")
+	// }
 }
 
 func main() {
 	boardSize := 6
 	qtdGoRoutines := 6
+	start := time.Now()
 	findResultParallel(boardSize, qtdGoRoutines)
+	t := time.Now()
+	fmt.Println(t.Sub(start))
 }
 
 //boardSize = 6
